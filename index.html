@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人工作台</title>
+<style>
+/* ===== 设计令牌 ===== */
+:root {
+  --bg: #171318;
+  --surface: #1e181c;
+  --surface-2: #262024;
+  --surface-3: #2f272b;
+  --glass: #1e181c;
+  --glass-strong: #262024;
+  --glass-border: rgba(255,255,255,0.08);
+  --primary: #f08299;
+  --primary-light: #f4aeba;
+  --primary-lighter: rgba(240,130,153,0.16);
+  --primary-dark: #d65574;
+  --primary-soft: #f4a3b2;
+  --text: #f2ebee;
+  --text-2: #c5b3b9;
+  --text-3: #8f7d83;
+  --border: rgba(255,255,255,0.075);
+  --border-strong: rgba(255,255,255,0.16);
+  --success: #6fc28d;
+  --warning: #e2a85e;
+  --info: #81b2e9;
+  --danger: #ed7b8d;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.28), 0 2px 10px rgba(0,0,0,0.2);
+  --shadow-md: 0 6px 22px rgba(0,0,0,0.36);
+  --shadow-lg: 0 18px 50px rgba(0,0,0,0.5);
+  --radius: 12px;
+  --radius-sm: 9px;
+  --sidebar-w: 232px;
+  --blur-amount: 18px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+  min-width: 1100px;
+  min-height: 100vh;
+  position: relative;
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== 模糊背景 ===== */
+.bg-layer {
+  position: fixed; inset: 0; z-index: -2;
+  background-image: url('https://aka.doubaocdn.com/s/aUesC2mbYc');
+  background-color: #1a1318;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  filter: blur(var(--blur-amount)) brightness(0.52) saturate(0.8);
+  transform: scale(1.06);
+}
+.bg-overlay {
+  position: fixed; inset: 0; z-index: -1;
+  background: linear-gradient(160deg, rgba(30,18,25,0.58), rgba(20,14,18,0.8) 55%, rgba(42,27,34,0.7));
+}
+
+/* ===== 布局 ===== */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--glass);
+  backdrop-filter: blur(calc(var(--blur-amount) + 4px));
+  -webkit-backdrop-filter: blur(calc(var(--blur-amount) + 4px));
+  border-right: 1px solid var(--glass-border);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 10;
+  padding: 22px 14px 16px;
+}
+
+.sidebar-brand {
+  display: flex; align-items: center; gap: 12px;
+  padding: 2px 8px 20px; border-bottom: 1px solid var(--border);
+}
+.brand-logo {
+  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 21px; font-weight: 800;
+  box-shadow: 0 8px 18px rgba(212,95,120,0.35);
+}
+.brand-text h1 { font-size: 17px; font-weight: 800; color: var(--text); line-height: 1.3; letter-spacing: 0.3px; }
+.brand-text p { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+.nav-label {
+  font-size: 11px; color: var(--text-3); font-weight: 700; letter-spacing: 1.5px;
+  padding: 20px 10px 10px;
+}
+.nav { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--text-2); font-size: 14px; text-decoration: none;
+  font-weight: 600; transition: all .18s; position: relative;
+}
+.nav-icon {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+}
+.nav-icon svg { width: 19px; height: 19px; }
+.nav-item:hover { background: var(--glass-strong); color: var(--text); transform: translateX(2px); }
+.nav-item.active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white; font-weight: 700; box-shadow: 0 10px 22px rgba(212,95,120,0.38);
+}
+.nav-item.active::before {
+  content: ''; position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
+  width: 4px; height: 26px; border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+}
+.nav-item.active .nav-icon { background: rgba(255,255,255,0.22); color: white; }
+
+.nav-item[data-route="dashboard"] .nav-icon { background: rgba(238,122,140,0.15); color: var(--primary-soft); }
+.nav-item[data-route="inventory"] .nav-icon { background: rgba(90,130,184,0.15); color: var(--info); }
+.nav-item[data-route="projects"] .nav-icon { background: rgba(95,168,114,0.15); color: var(--success); }
+.nav-item[data-route="notes"] .nav-icon { background: rgba(201,149,74,0.16); color: var(--warning); }
+.nav-item[data-route="todos"] .nav-icon { background: rgba(150,110,200,0.16); color: #b39adc; }
+
+.sidebar-footer { padding: 16px 4px 4px; border-top: 1px solid var(--border); }
+.footer-btns { display: flex; gap: 8px; }
+.btn-export {
+  flex: 1; padding: 10px 8px;
+  background: var(--glass-strong); backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  color: var(--primary-soft); font-size: 12px; cursor: pointer; font-weight: 700;
+  transition: all .15s;
+}
+.btn-export:hover { background: var(--primary-lighter); border-color: var(--primary-light); }
+.footer-hint { font-size: 10px; color: var(--text-3); margin-top: 12px; line-height: 1.8; padding: 0 4px; }
+.tool-entrance { padding: 14px 0 6px; border-top: 1px solid var(--border); }
+.tool-entrance .nav-item { border: 1px dashed var(--border-strong); color: var(--text-3); font-size: 13px; background: transparent; }
+.tool-entrance .nav-item:hover { border-color: var(--primary); color: var(--primary-soft); background: var(--primary-lighter); }
+
+.main { margin-left: var(--sidebar-w); flex: 1; padding: 28px 32px 100px; min-width: 0; }
+
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.page-header h2 { font-size: 26px; font-weight: 800; color: var(--text); }
+.page-header .right-area { display: flex; align-items: center; gap: 12px; }
+.page-header .date { font-size: 12px; color: var(--text-3); background: var(--glass); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--glass-border); font-weight: 500; }
+
+.settings-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--glass); backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2); box-shadow: var(--shadow-sm);
+}
+.settings-btn:hover { background: var(--glass-strong); color: var(--primary-soft); }
+.settings-btn svg { width: 18px; height: 18px; }
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* ===== 玻璃卡片 ===== */
+.card {
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.card-header {
+  padding: 18px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header h3 { font-size: 16px; font-weight: 700; }
+.card-body { padding: 20px 22px; }
+.card-close {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-3); font-size: 16px; display: flex; align-items: center; justify-content: center;
+}
+.card-close:hover { background: var(--danger); color: white; }
+
+/* ===== 仪表盘 ===== */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+.dash-full { margin-bottom: 18px; }
+
+.stat-card {
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  padding: 24px 26px; box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.stat-card .label { font-size: 13px; color: var(--text-3); margin-bottom: 10px; font-weight: 600; }
+.stat-card .value { font-size: 32px; font-weight: 800; color: var(--text); }
+.stat-card .value.pink { color: var(--primary-soft); }
+.stat-card .sub { font-size: 13px; color: var(--primary); margin-top: 10px; cursor: pointer; font-weight: 600; }
+.stat-card textarea {
+  width: 100%; margin-top: 12px; padding: 12px 14px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  font-size: 13px; font-family: inherit; resize: vertical; min-height: 50px;
+  background: var(--glass-strong); color: var(--text-2);
+}
+.stat-card textarea:focus { outline: none; border-color: var(--primary); }
+
+/* ===== 大状态筛选按钮 ===== */
+.status-filter-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.status-filter-btn {
+  padding: 20px 16px;
+  border-radius: var(--radius);
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-size: 17px; font-weight: 800;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative; overflow: hidden;
+}
+.status-filter-btn .sf-icon { font-size: 24px; }
+.status-filter-btn .sf-count { font-size: 12px; font-weight: 600; opacity: 0.8; }
+.status-filter-btn[data-s="all"] { background: linear-gradient(135deg, rgba(238,122,140,0.25), rgba(238,122,140,0.12)); color: var(--primary-soft); border-color: rgba(238,122,140,0.3); }
+.status-filter-btn[data-s="想法"] { background: linear-gradient(135deg, rgba(150,150,150,0.2), rgba(150,150,150,0.08)); color: #b7aeb1; border-color: rgba(150,150,150,0.25); }
+.status-filter-btn[data-s="调研中"] { background: linear-gradient(135deg, rgba(90,130,184,0.25), rgba(90,130,184,0.1)); color: var(--info); border-color: rgba(90,130,184,0.3); }
+.status-filter-btn[data-s="动手做"] { background: linear-gradient(135deg, rgba(95,168,114,0.25), rgba(95,168,114,0.1)); color: var(--success); border-color: rgba(95,168,114,0.3); }
+.status-filter-btn[data-s="搁置"] { background: linear-gradient(135deg, rgba(201,149,74,0.25), rgba(201,149,74,0.1)); color: var(--warning); border-color: rgba(201,149,74,0.3); }
+.status-filter-btn.active { transform: translateY(-3px); box-shadow: var(--shadow-md); border-width: 3px; }
+.status-filter-btn[data-s="all"].active { border-color: var(--primary); background: linear-gradient(135deg, rgba(238,122,140,0.4), rgba(238,122,140,0.2)); }
+.status-filter-btn[data-s="想法"].active { border-color: #9a9296; }
+.status-filter-btn[data-s="调研中"].active { border-color: var(--info); }
+.status-filter-btn[data-s="动手做"].active { border-color: var(--success); }
+.status-filter-btn[data-s="搁置"].active { border-color: var(--warning); }
+
+/* ===== 大项目卡片 ===== */
+.project-big-card {
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.project-big-card .pbc-header {
+  padding: 22px 26px;
+  display: flex; align-items: center; gap: 16px;
+  cursor: pointer;
+  border-bottom: 1px solid transparent;
+}
+.project-big-card .pbc-header:hover { background: var(--glass-strong); }
+.project-big-card.expanded .pbc-header { border-bottom-color: var(--border); }
+.pbc-status {
+  padding: 7px 16px; border-radius: 999px;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+  letter-spacing: 0.5px; line-height: 1.4;
+}
+.project-big-card .pbc-header { position: relative; }
+.project-big-card .pbc-header::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; opacity: 0.9;
+  background: var(--primary);
+}
+.project-big-card[data-status="想法"] .pbc-header::before { background: #a0a0a0; }
+.project-big-card[data-status="调研中"] .pbc-header::before { background: var(--info); }
+.project-big-card[data-status="动手做"] .pbc-header::before { background: var(--success); }
+.project-big-card[data-status="搁置"] .pbc-header::before { background: var(--warning); }
+.pbc-title { font-size: 20px; font-weight: 800; flex: 1; }
+.pbc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.pbc-count { font-size: 13px; color: var(--text-3); font-weight: 600; background: var(--glass-strong); padding: 5px 14px; border-radius: 12px; }
+.pbc-actions { display: flex; gap: 6px; }
+.pbc-btn {
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--glass-strong);
+  color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.pbc-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.pbc-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
+.pbc-toggle {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); flex-shrink: 0;
+}
+.pbc-toggle svg { transition: transform 0.25s; width: 18px; height: 18px; }
+.project-big-card.expanded .pbc-toggle svg { transform: rotate(180deg); }
+
+.pbc-body { padding: 0 26px 24px; display: none; }
+.project-big-card.expanded .pbc-body { display: block; }
+
+.sub-big-card {
+  background: var(--glass-strong);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  margin-top: 14px;
+  border-left: 5px solid var(--primary-light);
+}
+.sub-big-card .sbc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sub-big-card .sbc-title { font-size: 16px; font-weight: 700; flex: 1; }
+.sub-big-card .sbc-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-3); margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+.sub-big-card .sbc-desc { font-size: 13px; color: var(--text-2); line-height: 1.8; }
+.sub-big-card .sbc-desc div { margin-bottom: 5px; }
+.sub-big-card .sbc-desc strong { color: var(--text); font-weight: 700; }
+
+.tag {
+  display: inline-block; padding: 3px 12px;
+  background: var(--primary-lighter); color: var(--primary-soft);
+  border-radius: 10px; font-size: 12px; margin-right: 5px; font-weight: 600;
+}
+
+.status-想法 { background: rgba(150,150,150,0.2); color: #b7aeb1; }
+.status-调研中 { background: rgba(90,130,184,0.2); color: var(--info); }
+.status-动手做 { background: rgba(95,168,114,0.2); color: var(--success); }
+.status-搁置 { background: rgba(201,149,74,0.2); color: var(--warning); }
+
+/* ===== 项目总览小卡片 ===== */
+.proj-overview-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;
+}
+.proj-chip-card {
+  background: var(--glass-strong); backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  padding: 18px 20px; cursor: pointer; position: relative; box-shadow: var(--shadow-sm);
+}
+.proj-chip-card:hover { border-color: var(--primary-light); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.proj-chip-card .chip-title { font-weight: 700; font-size: 16px; margin-bottom: 12px; padding-right: 70px; line-height: 1.4; }
+.proj-chip-card .chip-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.proj-chip-card .chip-count { font-size: 12px; color: var(--text-3); font-weight: 600; }
+.proj-chip-card .chip-actions { position: absolute; top: 14px; right: 14px; display: flex; gap: 5px; opacity: 0; }
+.proj-chip-card:hover .chip-actions { opacity: 1; }
+.chip-action-btn {
+  width: 28px; height: 28px; border: none; border-radius: 8px;
+  background: var(--glass-strong); color: var(--text-2); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--glass-border);
+}
+.chip-action-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.chip-action-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
+
+.new-proj-banner {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 24px; background: linear-gradient(135deg, rgba(238,122,140,0.18), rgba(238,122,140,0.08));
+  border: 2px dashed var(--primary-light); border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--primary-soft); font-size: 16px; font-weight: 700;
+}
+.new-proj-banner:hover { background: linear-gradient(135deg, rgba(238,122,140,0.28), rgba(238,122,140,0.14)); border-color: var(--primary); }
+
+.big-add-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 26px; background: var(--primary); color: white;
+  border: none; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700;
+  cursor: pointer; box-shadow: var(--shadow-md);
+}
+.big-add-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.big-add-btn svg { width: 18px; height: 18px; }
+
+/* ===== 待办 ===== */
+.todo-mini-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0; border-bottom: 1px dashed var(--border);
+  font-size: 14px; cursor: pointer;
+}
+.todo-mini-item:last-child { border-bottom: none; }
+.todo-mini-item:hover { color: var(--primary-soft); }
+.todo-mini-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+
+.risk-item {
+  padding: 12px 18px; background: rgba(201,149,74,0.15);
+  backdrop-filter: blur(8px); border-left: 4px solid var(--warning);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 10px; font-size: 13px; color: #e8c58f;
+  display: flex; justify-content: space-between; align-items: center; font-weight: 500;
+}
+.risk-item:last-child { margin-bottom: 0; }
+
+/* ===== 悬浮按钮 ===== */
+.fab-group { position: fixed; right: 30px; bottom: 30px; display: flex; flex-direction: column; gap: 14px; z-index: 50; }
+.fab {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: var(--primary); color: white;
+  border: 2px solid rgba(255,255,255,0.6); box-shadow: var(--shadow-lg);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; backdrop-filter: blur(10px);
+}
+.fab:hover { background: var(--primary-dark); transform: translateY(-3px); }
+
+/* ===== 模态 ===== */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(120,50,65,0.25); backdrop-filter: blur(5px);
+  z-index: 100; align-items: center; justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--glass-strong); backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); width: 500px; max-height: 85vh; overflow-y: auto;
+}
+.modal-header { padding: 22px 26px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 18px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 26px; color: var(--text-3); cursor: pointer; line-height: 1; }
+.modal-body { padding: 24px 26px; }
+.modal-footer { padding: 18px 26px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 8px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 11px 14px; border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); font-size: 14px; font-family: inherit;
+  background: var(--glass-strong); color: var(--text);
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-lighter);
+}
+.form-group textarea { resize: vertical; min-height: 70px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+.btn { padding: 10px 20px; border-radius: var(--radius-sm); border: none; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-ghost { background: var(--glass); color: var(--text-2); border: 1px solid var(--border-strong); backdrop-filter: blur(8px); }
+.btn-ghost:hover { background: var(--glass-strong); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-danger { background: rgba(212,95,120,0.15); color: var(--danger); }
+.btn-danger:hover { background: rgba(212,95,120,0.25); }
+
+/* ===== 表格 ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 14px 18px; background: var(--glass-strong); color: var(--text-2); font-weight: 700; font-size: 12px; border-bottom: 1px solid var(--border); }
+td { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--glass-strong); }
+.profit-pos { color: var(--success); font-weight: 700; }
+.profit-neg { color: var(--danger); font-weight: 700; }
+.badge { display: inline-block; padding: 4px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.badge-stock { background: rgba(90,130,184,0.18); color: var(--info); }
+.badge-sold { background: rgba(95,168,114,0.18); color: var(--success); }
+
+/* ===== 备忘录 ===== */
+.notes-app { display: flex; flex-direction: column; gap: 18px; }
+.notes-editor {
+  background: var(--glass); backdrop-filter: blur(var(--blur-amount));
+  -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--glass-border); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+.notes-editor-toolbar { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; background: var(--glass-strong); }
+.notes-editor-toolbar input { padding: 8px 16px; border: 1px solid var(--border-strong); border-radius: 20px; font-size: 13px; background: var(--glass-strong); width: 220px; }
+.notes-editor-toolbar input:focus { outline: none; border-color: var(--primary); }
+.notes-editor textarea { width: 100%; padding: 20px 24px; border: none; font-size: 16px; font-family: inherit; resize: vertical; min-height: 120px; background: transparent; color: var(--text); line-height: 1.8; }
+.notes-editor textarea:focus { outline: none; }
+.notes-editor-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; background: var(--glass-strong); }
+
+.notes-search { position: relative; }
+.notes-search input {
+  width: 100%; padding: 13px 18px 13px 46px; border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); font-size: 14px; background: var(--glass);
+  backdrop-filter: blur(8px); color: var(--text);
+}
+.notes-search input:focus { outline: none; border-color: var(--primary); }
+.notes-search svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-3); }
+
+.notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.note-card {
+  background: var(--glass-strong); backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius);
+  padding: 20px 22px; box-shadow: var(--shadow-sm); position: relative;
+}
+.note-card .note-cat { font-size: 12px; color: var(--primary-soft); background: var(--primary-lighter); padding: 4px 14px; border-radius: 10px; display: inline-block; margin-bottom: 14px; font-weight: 700; }
+.note-card .note-content { font-size: 15px; color: var(--text); line-height: 1.8; white-space: pre-wrap; word-break: break-word; }
+.note-card .note-time { font-size: 12px; color: var(--text-3); margin-top: 14px; }
+.note-card .note-del {
+  position: absolute; top: 16px; right: 16px; background: var(--glass);
+  border: 1px solid var(--border); border-radius: 8px; width: 28px; height: 28px;
+  color: var(--text-3); cursor: pointer; font-size: 16px; opacity: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.note-card:hover .note-del { opacity: 1; }
+.note-card .note-del:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+/* ===== 待办页 ===== */
+.todo-add { display: flex; gap: 14px; margin-bottom: 20px; }
+.todo-add input {
+  flex: 1; padding: 14px 18px; border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); font-size: 15px; background: var(--glass);
+  backdrop-filter: blur(8px); color: var(--text);
+}
+.todo-add input:focus { outline: none; border-color: var(--primary); }
+.todo-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px; background: var(--glass);
+  backdrop-filter: blur(var(--blur-amount)); -webkit-backdrop-filter: blur(var(--blur-amount));
+  border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+  margin-bottom: 12px; box-shadow: var(--shadow-sm);
+}
+.todo-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+.todo-item .todo-text { flex: 1; font-size: 15px; }
+.todo-item.done .todo-text { text-decoration: line-through; color: var(--text-3); }
+.todo-item .todo-del {
+  background: none; border: none; color: var(--text-3); cursor: pointer;
+  font-size: 20px; opacity: 0; width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+.todo-item:hover .todo-del { opacity: 1; }
+.todo-item .todo-del:hover { background: rgba(212,95,120,0.15); color: var(--danger); }
+
+/* ===== 添加卡片面板 ===== */
+.add-card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.add-card-option {
+  padding: 16px; border: 2px solid var(--border-strong); border-radius: var(--radius-sm);
+  cursor: pointer; background: var(--glass-strong); text-align: center;
+}
+.add-card-option:hover { border-color: var(--primary); background: var(--primary-lighter); }
+.add-card-option .aco-icon { font-size: 28px; margin-bottom: 6px; }
+.add-card-option .aco-name { font-size: 14px; font-weight: 700; color: var(--text); }
+
+/* ===== 设置面板 ===== */
+.settings-panel { width: 360px; }
+.setting-row { margin-bottom: 20px; }
+.setting-row label { display: block; font-size: 13px; font-weight: 700; color: var(--text-2); margin-bottom: 10px; }
+.setting-row input[type="range"] { width: 100%; accent-color: var(--primary); }
+.setting-row .range-val { font-size: 13px; color: var(--primary-soft); font-weight: 700; float: right; }
+
+/* ===== 背景壁纸选择 ===== */
+.bg-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.bg-preset {
+  height: 52px; border-radius: 10px; cursor: pointer;
+  border: 2px solid transparent; background-size: cover; background-position: center;
+  position: relative; transition: all .15s;
+}
+.bg-preset:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.bg-preset.active { border-color: var(--primary); }
+.bg-preset.active::after {
+  content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 800; font-size: 18px; background: rgba(0,0,0,0.28); border-radius: 8px;
+}
+
+.empty-state { text-align: center; padding: 44px 20px; color: var(--text-3); font-size: 14px; }
+.toast {
+  position: fixed; top: 28px; left: 50%; transform: translateX(-50%);
+  background: rgba(42,34,36,0.92); backdrop-filter: blur(10px);
+  color: white; padding: 14px 28px; border-radius: var(--radius-sm);
+  font-size: 14px; z-index: 200; opacity: 0; pointer-events: none; box-shadow: var(--shadow-lg); font-weight: 600;
+}
+.toast.show { opacity: 1; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+/* ===== 数字对齐 ===== */
+.stat-card .value, .value, .pbc-count, .chip-count, .range-val, table td, table th, .profit-pos, .profit-neg { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+<div class="bg-overlay"></div>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">羊</div>
+      <div class="brand-text">
+        <h1>个人工作台</h1>
+        <p>数据本地存储 · 不上传云端</p>
+      </div>
+    </div>
+    <div class="nav-label">工作空间</div>
+    <nav class="nav" id="nav">
+      <a class="nav-item active" data-route="dashboard"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>首页仪表盘</a>
+      <a class="nav-item" data-route="inventory"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></span>二手数码台账</a>
+      <a class="nav-item" data-route="projects"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></span>项目管理</a>
+      <a class="nav-item" data-route="notes"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></span>备忘录</a>
+      <a class="nav-item" data-route="todos"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span>待办清单</a>
+    </nav>
+    <div class="tool-entrance">
+      <a class="nav-item" onclick="showToast('拍机堂出价计算器开发中')"><span class="nav-icon" style="background:rgba(150,150,150,0.12);color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></span>拍机堂出价计算器</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="footer-btns">
+        <button class="btn-export" onclick="exportAllData()">导出备份</button>
+        <button class="btn-export" onclick="document.getElementById('importFile').click()">导入备份</button>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none;" onchange="importAllData(this)">
+      </div>
+      <div class="footer-hint">快捷键：1-5 切换 · N 新增 · P 进货 · S 出货 · Esc 关闭</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h2 id="pageTitle">首页仪表盘</h2>
+      <div class="right-area">
+        <span class="date" id="todayDate"></span>
+        <button class="settings-btn" onclick="openModal('settingsModal')" title="外观设置">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 仪表盘 -->
+    <section class="view active" id="view-dashboard">
+      <div id="dashCards"></div>
+      <div class="new-proj-banner" onclick="openModal('addCardModal')" style="margin-top:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        添加仪表盘卡片
+      </div>
+    </section>
+
+    <!-- 台账 -->
+    <section class="view" id="view-inventory">
+      <div class="dash-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="stat-card"><div class="label">库存机器</div><div class="value" id="invStockCount">0</div></div>
+        <div class="stat-card"><div class="label">库存成本</div><div class="value pink" id="invStockCost">¥0</div></div>
+        <div class="stat-card"><div class="label">累计利润</div><div class="value" id="invProfit">¥0</div></div>
+      </div>
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header"><h3>库存列表</h3><button class="btn btn-sm btn-primary" onclick="openModal('purchaseModal')">新增进货</button></div>
+        <div class="card-body"><div class="table-wrap"><table>
+          <thead><tr><th>机型</th><th>来源</th><th>购入价</th><th>购入日期</th><th>故障备注</th><th>操作</th></tr></thead>
+          <tbody id="stockTable"><tr><td colspan="6" class="empty-state">暂无库存</td></tr></tbody>
+        </table></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>交易历史</h3><div style="display:flex;gap:8px;"><button class="btn btn-sm btn-ghost" onclick="exportCSV()">导出CSV</button><button class="btn btn-sm btn-primary" onclick="openModal('saleModal')">新增出货</button></div></div>
+        <div class="card-body"><div class="table-wrap"><table>
+          <thead><tr><th>日期</th><th>类型</th><th>机型</th><th>金额</th><th>渠道</th><th>利润</th><th>操作</th></tr></thead>
+          <tbody id="txTable"><tr><td colspan="7" class="empty-state">暂无交易</td></tr></tbody>
+        </table></div></div>
+      </div>
+    </section>
+
+    <!-- 项目管理 -->
+    <section class="view" id="view-projects">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+        <h2 style="font-size:22px;font-weight:800;">项目管理</h2>
+        <button class="big-add-btn" onclick="openModal('parentModal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建母项目</button>
+      </div>
+      <div class="status-filter-bar" id="statusFilterBar"></div>
+      <div id="projectList"><div class="empty-state">暂无项目，点击右上角新建</div></div>
+    </section>
+
+    <!-- 备忘录 -->
+    <section class="view" id="view-notes">
+      <div class="notes-app">
+        <div class="notes-editor">
+          <div class="notes-editor-toolbar">
+            <input type="text" id="noteCategory" placeholder="分类（如：灵感、待查、随笔）">
+            <span style="font-size:12px;color:var(--text-3);margin-left:auto;">Ctrl+Enter 保存</span>
+          </div>
+          <textarea id="noteInput" placeholder="开始记录..."></textarea>
+          <div class="notes-editor-footer"><button class="btn btn-primary" onclick="addNote()">保存笔记</button></div>
+        </div>
+        <div class="notes-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="noteSearch" placeholder="搜索笔记内容或分类..." oninput="renderNotes()">
+        </div>
+        <div class="notes-grid" id="notesGrid"><div class="empty-state" style="grid-column:1/-1;">暂无笔记</div></div>
+      </div>
+    </section>
+
+    <!-- 待办 -->
+    <section class="view" id="view-todos">
+      <div class="todo-add">
+        <input type="text" id="todoInput" placeholder="添加待办事项，回车保存" onkeydown="if(event.key==='Enter')addTodo()">
+        <button class="btn btn-primary" onclick="addTodo()">添加</button>
+      </div>
+      <div id="todoList"><div class="empty-state">暂无待办</div></div>
+    </section>
+  </main>
+</div>
+
+<div class="fab-group">
+  <button class="fab" onclick="openModal('purchaseModal')">进货</button>
+  <button class="fab" onclick="openModal('saleModal')">出货</button>
+</div>
+
+<!-- 进货 -->
+<div class="modal-overlay" id="purchaseModal"><div class="modal">
+  <div class="modal-header"><h3>新增进货</h3><button class="modal-close" onclick="closeModal('purchaseModal')">&times;</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>机型 *</label><input type="text" id="pModel" placeholder="如：iPhone 13 Pro 256G 远峰蓝"></div>
+    <div class="form-row">
+      <div class="form-group"><label>来源渠道 *</label><input type="text" id="pSource" placeholder="如：拍机堂、闲鱼、线下"></div>
+      <div class="form-group"><label>购入价格 *</label><input type="number" id="pPrice" placeholder="0.00" step="0.01"></div>
+    </div>
+    <div class="form-row"><div class="form-group"><label>购入日期</label><input type="date" id="pDate"></div></div>
+    <div class="form-group"><label>故障备注</label><textarea id="pFault" placeholder="如：屏幕划痕、电池87%、无配件"></textarea></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('purchaseModal')">取消</button><button class="btn btn-primary" onclick="addPurchase()">确认进货</button></div>
+</div></div>
+
+<!-- 出货 -->
+<div class="modal-overlay" id="saleModal"><div class="modal">
+  <div class="modal-header"><h3>新增出货</h3><button class="modal-close" onclick="closeModal('saleModal')">&times;</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>选择库存机器 *</label><select id="sStock"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label>卖出价格 *</label><input type="number" id="sPrice" placeholder="0.00" step="0.01"></div>
+      <div class="form-group"><label>出货渠道</label><input type="text" id="sChannel" placeholder="如：闲鱼、转转、线下"></div>
+    </div>
+    <div class="form-group"><label>成交日期</label><input type="date" id="sDate"></div>
+    <div id="sProfitHint" style="font-size:13px;color:var(--text-3);margin-top:-10px;margin-bottom:18px;"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('saleModal')">取消</button><button class="btn btn-primary" onclick="addSale()">确认出货</button></div>
+</div></div>
+
+<!-- 母项目 -->
+<div class="modal-overlay" id="parentModal"><div class="modal">
+  <div class="modal-header"><h3 id="parentModalTitle">新建母项目</h3><button class="modal-close" onclick="closeModal('parentModal')">&times;</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="ppEditId">
+    <div class="form-group"><label>项目标题 *</label><input type="text" id="ppTitle" placeholder="如：二手数码副业"></div>
+    <div class="form-row">
+      <div class="form-group"><label>状态</label><select id="ppStatus"><option>想法</option><option>调研中</option><option>动手做</option><option>搁置</option></select></div>
+      <div class="form-group"><label>标签（逗号分隔）</label><input type="text" id="ppTags" placeholder="如：副业,数码,长期"></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('parentModal')">取消</button><button class="btn btn-primary" onclick="saveParentProject()">保存</button></div>
+</div></div>
+
+<!-- 子项目 -->
+<div class="modal-overlay" id="subModal"><div class="modal">
+  <div class="modal-header"><h3>新建子项目</h3><button class="modal-close" onclick="closeModal('subModal')">&times;</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="spParentId">
+    <div class="form-group"><label>标题 *</label><input type="text" id="spTitle"></div>
+    <div class="form-row">
+      <div class="form-group"><label>状态</label><select id="spStatus"><option>想法</option><option>调研中</option><option>动手做</option><option>搁置</option></select></div>
+      <div class="form-group"><label>标签</label><input type="text" id="spTags" placeholder="逗号分隔"></div>
+    </div>
+    <div class="form-group"><label>设想</label><textarea id="spIdea" placeholder="这个项目想做什么"></textarea></div>
+    <div class="form-group"><label>已完成</label><textarea id="spDone" placeholder="已经做了哪些"></textarea></div>
+    <div class="form-group"><label>下一步</label><textarea id="spNext" placeholder="接下来要做什么"></textarea></div>
+    <div class="form-group"><label>潜在风险</label><textarea id="spRisk" placeholder="可能遇到的问题"></textarea></div>
+    <div class="form-group"><label>参考链接</label><input type="text" id="spLink" placeholder="https://..."></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('subModal')">取消</button><button class="btn btn-primary" onclick="addSubProject()">创建</button></div>
+</div></div>
+
+<!-- 风险 -->
+<div class="modal-overlay" id="riskModal"><div class="modal" style="width:420px;">
+  <div class="modal-header"><h3>添加风险提示</h3><button class="modal-close" onclick="closeModal('riskModal')">&times;</button></div>
+  <div class="modal-body"><div class="form-group"><label>风险内容 *</label><textarea id="riskText" placeholder="如：拼多多保证金需30天才能提现"></textarea></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('riskModal')">取消</button><button class="btn btn-primary" onclick="addRisk()">添加</button></div>
+</div></div>
+
+<!-- 现金 -->
+<div class="modal-overlay" id="cashModal"><div class="modal" style="width:380px;">
+  <div class="modal-header"><h3>修改现金余额</h3><button class="modal-close" onclick="closeModal('cashModal')">&times;</button></div>
+  <div class="modal-body"><div class="form-group"><label>现金余额（元）</label><input type="number" id="cashInput" step="0.01"></div></div>
+  <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('cashModal')">取消</button><button class="btn btn-primary" onclick="saveCash()">保存</button></div>
+</div></div>
+
+<!-- 设置 -->
+<div class="modal-overlay" id="settingsModal"><div class="modal settings-panel">
+  <div class="modal-header"><h3>外观设置</h3><button class="modal-close" onclick="closeModal('settingsModal')">&times;</button></div>
+  <div class="modal-body">
+    <div class="setting-row">
+      <label>背景模糊度 <span class="range-val" id="blurVal">18px</span></label>
+      <input type="range" id="blurSlider" min="0" max="30" value="18" oninput="setBlur(this.value)">
+    </div>
+    <div style="font-size:12px;color:var(--text-3);line-height:1.7;">拖动滑块实时调整背景模糊程度，设置自动保存。</div>
+    <div class="setting-row" style="margin-top:22px;">
+      <label>背景壁纸</label>
+      <div class="bg-presets" id="bgPresets"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button class="btn btn-sm btn-ghost" onclick="document.getElementById('bgUpload').click()">上传图片</button>
+        <button class="btn btn-sm btn-ghost" onclick="setBgReset()">恢复默认</button>
+      </div>
+      <input type="file" id="bgUpload" accept="image/*" style="display:none;" onchange="handleBgUpload(this)">
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <input type="text" id="bgUrl" placeholder="或粘贴图片链接..." style="flex:1;">
+        <button class="btn btn-sm btn-primary" onclick="setBgUrl()">应用</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- 添加卡片 -->
+<div class="modal-overlay" id="addCardModal"><div class="modal" style="width:460px;">
+  <div class="modal-header"><h3>添加仪表盘卡片</h3><button class="modal-close" onclick="closeModal('addCardModal')">&times;</button></div>
+  <div class="modal-body"><div class="add-card-grid" id="addCardGrid"></div></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 数据层 ===== */
+const STORAGE_KEY = 'personal_workbench_v4';
+const SETTINGS_KEY = 'personal_workbench_settings';
+let DB = { cash:0, pendingNote:'', stock:[], transactions:[], projects:[], notes:[], todos:[], risks:[] };
+let settings = { blur: 18, bg: { type:'url', value:'https://aka.doubaocdn.com/s/aUesC2mbYc' } };
+let dashLayout = ['cash','pending','projects','todos','risks'];
+
+const CARD_DEFS = {
+  cash: { name:'现金余额', icon:'💰', render: renderCashCard },
+  pending: { name:'待回款备注', icon:'📝', render: renderPendingCard },
+  projects: { name:'项目总览', icon:'📁', render: renderProjectsCard },
+  todos: { name:'今日待办', icon:'✅', render: renderTodosCard },
+  risks: { name:'风险提示', icon:'⚠️', render: renderRisksCard },
+  stock: { name:'库存概览', icon:'📦', render: renderStockCard },
+  profit: { name:'利润概览', icon:'📈', render: renderProfitCard }
+};
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) Object.assign(DB, JSON.parse(raw));
+    const s = localStorage.getItem(SETTINGS_KEY);
+    if (s) { const sd = JSON.parse(s); settings.blur = sd.blur||18; dashLayout = sd.dashLayout||['cash','pending','projects','todos','risks']; if (sd.bg) settings.bg = sd.bg; }
+  } catch(e) { console.warn(e); }
+}
+function saveDB() { localStorage.setItem(STORAGE_KEY, JSON.stringify(DB)); }
+function saveSettings() { localStorage.setItem(SETTINGS_KEY, JSON.stringify({blur:settings.blur, dashLayout, bg:settings.bg})); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function today() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function fmt(n) { return '¥' + Number(n||0).toFixed(2); }
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+function escapeHtml(str) { const d=document.createElement('div'); d.textContent=str||''; return d.innerHTML; }
+
+/* ===== 背景模糊 ===== */
+function setBlur(val) {
+  settings.blur = Number(val);
+  document.documentElement.style.setProperty('--blur-amount', val + 'px');
+  document.getElementById('blurVal').textContent = val + 'px';
+  saveSettings();
+}
+
+/* ===== 背景壁纸 ===== */
+const DEFAULT_BG_URL = 'https://aka.doubaocdn.com/s/aUesC2mbYc';
+const BG_PRESETS = [
+  { key:'default', name:'原壁纸', type:'url', value:'https://aka.doubaocdn.com/s/aUesC2mbYc' },
+  { key:'pink', name:'粉彩', type:'gradient', value:'linear-gradient(135deg,#fde2e8,#f8c8d0 45%,#e7d7f5)' },
+  { key:'sunset', name:'晚霞', type:'gradient', value:'linear-gradient(135deg,#ff9a8b,#ff6a88 50%,#ff99ac)' },
+  { key:'sky', name:'晴空', type:'gradient', value:'linear-gradient(135deg,#a1c4fd,#c2e9fb)' },
+  { key:'mint', name:'薄荷', type:'gradient', value:'linear-gradient(135deg,#84fab0,#8fd3f4)' },
+  { key:'lavender', name:'薰衣草', type:'gradient', value:'linear-gradient(135deg,#c3cfe2,#f5f7fa)' },
+  { key:'aurora', name:'极光', type:'gradient', value:'linear-gradient(135deg,#43cea2,#185a9d)' },
+  { key:'night', name:'深夜', type:'gradient', value:'linear-gradient(135deg,#2b5876,#4e4376)' },
+];
+
+function applyBackground() {
+  const bg = settings.bg || { type:'url', value:DEFAULT_BG_URL };
+  const layer = document.querySelector('.bg-layer');
+  if (!layer) return;
+  layer.style.backgroundImage = bg.type === 'gradient' ? bg.value : `url('${bg.value}')`;
+}
+function renderBgPresets() {
+  const cur = settings.bg || { type:'url', value:DEFAULT_BG_URL };
+  const el = document.getElementById('bgPresets');
+  if (!el) return;
+  el.innerHTML = BG_PRESETS.map(p => {
+    const css = p.type === 'gradient' ? p.value : `url('${p.value}')`;
+    const active = (cur.type === p.type && cur.value === p.value);
+    return `<div class="bg-preset ${active?'active':''}" style="background-image:${css};" title="${p.name}" onclick="setBgPreset('${p.key}')"></div>`;
+  }).join('');
+}
+function setBgPreset(key) {
+  const p = BG_PRESETS.find(x => x.key === key);
+  if (!p) return;
+  settings.bg = { type: p.type, value: p.value };
+  saveSettings(); applyBackground(); renderBgPresets();
+}
+function setBgReset() {
+  settings.bg = { type:'url', value:DEFAULT_BG_URL };
+  saveSettings(); applyBackground(); renderBgPresets(); showToast('已恢复默认背景');
+}
+function setBgUrl() {
+  const url = document.getElementById('bgUrl').value.trim();
+  if (!url) return showToast('请输入图片链接');
+  settings.bg = { type:'url', value:url };
+  saveSettings(); applyBackground(); renderBgPresets(); document.getElementById('bgUrl').value=''; showToast('背景已更新');
+}
+function handleBgUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 1920;
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      let dataUrl = e.target.result;
+      try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch(err) {}
+      settings.bg = { type:'url', value:dataUrl };
+      saveSettings(); applyBackground(); renderBgPresets(); showToast('背景已更新');
+    };
+    img.onerror = () => showToast('图片加载失败');
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+/* ===== 路由 ===== */
+const ROUTES = { dashboard:'首页仪表盘', inventory:'二手数码台账', projects:'项目管理', notes:'备忘录', todos:'待办清单' };
+function navigate(route) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+route).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.route===route));
+  document.getElementById('pageTitle').textContent = ROUTES[route]||'';
+  location.hash = route;
+  if (route==='dashboard') renderDashboard();
+  if (route==='inventory') renderInventory();
+  if (route==='projects') renderProjects();
+  if (route==='notes') renderNotes();
+  if (route==='todos') renderTodos();
+}
+document.querySelectorAll('.nav-item[data-route]').forEach(n=>n.addEventListener('click',()=>navigate(n.dataset.route)));
+window.addEventListener('hashchange',()=>{ const r=location.hash.slice(1)||'dashboard'; if(ROUTES[r]) navigate(r); });
+
+/* ===== 模态 ===== */
+function openModal(id) {
+  document.getElementById(id).classList.add('show');
+  if (id==='purchaseModal') document.getElementById('pDate').value=today();
+  if (id==='saleModal') { document.getElementById('sDate').value=today(); refreshStockSelect(); }
+  if (id==='settingsModal') { document.getElementById('blurSlider').value=settings.blur; document.getElementById('blurVal').textContent=settings.blur+'px'; renderBgPresets(); }
+  if (id==='addCardModal') renderAddCardGrid();
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+  if (id==='parentModal') { document.getElementById('ppEditId').value=''; document.getElementById('ppTitle').value=''; document.getElementById('ppStatus').value='想法'; document.getElementById('ppTags').value=''; document.getElementById('parentModalTitle').textContent='新建母项目'; }
+}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); }));
+
+/* ===== 仪表盘卡片渲染 ===== */
+function cardWrapper(id, title, content, showClose=true) {
+  return `<div class="card" style="margin-bottom:18px;">
+    <div class="card-header"><h3>${title}</h3>${showClose?`<button class="card-close" onclick="removeDashCard('${id}')" title="移除卡片">&times;</button>`:''}</div>
+    <div class="card-body">${content}</div>
+  </div>`;
+}
+
+function renderCashCard() {
+  return `<div style="text-align:center;padding:10px 0;">
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:8px;font-weight:600;">现金余额</div>
+    <div style="font-size:36px;font-weight:800;color:var(--primary-soft);">${fmt(DB.cash)}</div>
+    <div style="font-size:13px;color:var(--primary);margin-top:10px;cursor:pointer;font-weight:600;" onclick="editCash()">点击修改</div>
+  </div>`;
+}
+function renderPendingCard() {
+  return `<div style="font-size:13px;color:var(--text-3);margin-bottom:10px;font-weight:600;">待回款备注</div>
+    <textarea id="pendingNote" placeholder="随手记，如：拼多多保证金1000元待提现" oninput="savePendingNote()" style="width:100%;padding:12px 14px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;resize:vertical;min-height:60px;background:var(--glass-strong);color:var(--text-2);">${escapeHtml(DB.pendingNote||'')}</textarea>`;
+}
+function renderProjectsCard() {
+  if (DB.projects.length===0) return `<div class="new-proj-banner" onclick="openModal('parentModal')" style="padding:18px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>还没有项目，点击创建第一个母项目</div>`;
+  return '<div class="proj-overview-grid">' + DB.projects.map(p=>{
+    const sb = p.status?`<span class="badge status-${p.status}">${p.status}</span>`:'';
+    return `<div class="proj-chip-card" onclick="navigate('projects')">
+      <div class="chip-actions">
+        <button class="chip-action-btn" title="编辑" onclick="event.stopPropagation();editParent('${p.id}')">✎</button>
+        <button class="chip-action-btn" title="新增子项目" onclick="event.stopPropagation();openSubModal('${p.id}')">+</button>
+        <button class="chip-action-btn danger" title="删除" onclick="event.stopPropagation();delParent('${p.id}')">✕</button>
+      </div>
+      <div class="chip-title">${escapeHtml(p.title)}</div>
+      <div class="chip-meta">${sb}<span class="chip-count">${p.children.length} 个子项目</span></div>
+    </div>`;
+  }).join('') + '</div>';
+}
+function renderTodosCard() {
+  const pending = DB.todos.filter(t=>!t.done).slice(0,6);
+  if (pending.length===0) return '<div class="empty-state">暂无待办</div>';
+  return pending.map(t=>`<div class="todo-mini-item" onclick="toggleTodo('${t.id}')"><input type="checkbox" ${t.done?'checked':''} onclick="event.stopPropagation()" onchange="toggleTodo('${t.id}')"><span>${escapeHtml(t.text)}</span></div>`).join('');
+}
+function renderRisksCard() {
+  if (DB.risks.length===0) return '<div class="empty-state">暂无风险提示</div>';
+  return DB.risks.map(r=>`<div class="risk-item"><span>${escapeHtml(r.text)}</span><button class="btn btn-sm btn-danger" onclick="delRisk('${r.id}')">删除</button></div>`).join('');
+}
+function renderStockCard() {
+  const stock = DB.transactions.filter(t=>t.type==='purchase'&&!t.sold);
+  const cost = stock.reduce((s,t)=>s+Number(t.price||0),0);
+  return `<div style="display:flex;justify-content:space-around;text-align:center;padding:8px 0;">
+    <div><div style="font-size:28px;font-weight:800;color:var(--info);">${stock.length}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px;">库存机器</div></div>
+    <div><div style="font-size:28px;font-weight:800;color:var(--primary-soft);">${fmt(cost)}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px;">库存成本</div></div>
+  </div>`;
+}
+function renderProfitCard() {
+  const profit = DB.transactions.filter(t=>t.type==='sale').reduce((s,t)=>s+Number(t.profit||0),0);
+  const sales = DB.transactions.filter(t=>t.type==='sale').length;
+  return `<div style="display:flex;justify-content:space-around;text-align:center;padding:8px 0;">
+    <div><div style="font-size:28px;font-weight:800;color:${profit>=0?'var(--success)':'var(--danger)'};">${profit>=0?'+':''}${fmt(profit)}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px;">累计利润</div></div>
+    <div><div style="font-size:28px;font-weight:800;color:var(--text);">${sales}</div><div style="font-size:12px;color:var(--text-3);margin-top:4px;">已售出</div></div>
+  </div>`;
+}
+
+function renderDashboard() {
+  const el = document.getElementById('dashCards');
+  el.innerHTML = '';
+  // 前两个卡片用网格布局
+  const topCards = dashLayout.filter(c=>['cash','pending','stock','profit'].includes(c));
+  const otherCards = dashLayout.filter(c=>!['cash','pending','stock','profit'].includes(c));
+  if (topCards.length>0) {
+    const grid = document.createElement('div');
+    grid.className = 'dash-grid';
+    if (topCards.length>2) grid.style.gridTemplateColumns = `repeat(${Math.min(topCards.length,4)}, 1fr)`;
+    topCards.forEach(cid=>{
+      const def = CARD_DEFS[cid];
+      if (!def) return;
+      const div = document.createElement('div');
+      div.className = 'stat-card';
+      div.style.position = 'relative';
+      div.innerHTML = `<button class="card-close" style="position:absolute;top:12px;right:12px;" onclick="removeDashCard('${cid}')" title="移除">&times;</button>` + def.render();
+      grid.appendChild(div);
+    });
+    el.appendChild(grid);
+  }
+  otherCards.forEach(cid=>{
+    const def = CARD_DEFS[cid];
+    if (!def) return;
+    const titles = {projects:'项目总览',todos:'今日待办',risks:'风险提示'};
+    el.insertAdjacentHTML('beforeend', cardWrapper(cid, titles[cid]||def.name, def.render()));
+  });
+}
+
+function removeDashCard(cid) {
+  dashLayout = dashLayout.filter(c=>c!==cid);
+  saveSettings();
+  renderDashboard();
+  showToast('已移除卡片');
+}
+
+function renderAddCardGrid() {
+  const available = Object.keys(CARD_DEFS).filter(k=>!dashLayout.includes(k));
+  const el = document.getElementById('addCardGrid');
+  if (available.length===0) { el.innerHTML='<div class="empty-state" style="grid-column:1/-1;">所有卡片都已添加</div>'; return; }
+  el.innerHTML = available.map(k=>`<div class="add-card-option" onclick="addDashCard('${k}')">
+    <div class="aco-icon">${CARD_DEFS[k].icon}</div>
+    <div class="aco-name">${CARD_DEFS[k].name}</div>
+  </div>`).join('');
+}
+function addDashCard(cid) {
+  if (!dashLayout.includes(cid)) { dashLayout.push(cid); saveSettings(); renderDashboard(); closeModal('addCardModal'); showToast('已添加卡片'); }
+}
+
+/* ===== 仪表盘数据操作 ===== */
+function savePendingNote() { DB.pendingNote = document.getElementById('pendingNote').value; saveDB(); }
+function editCash() { document.getElementById('cashInput').value=DB.cash; openModal('cashModal'); }
+function saveCash() { DB.cash=Number(document.getElementById('cashInput').value)||0; saveDB(); renderDashboard(); closeModal('cashModal'); showToast('已更新'); }
+function addRisk() { const t=document.getElementById('riskText').value.trim(); if(!t)return showToast('请输入风险内容'); DB.risks.push({id:uid(),text:t}); document.getElementById('riskText').value=''; saveDB(); renderDashboard(); closeModal('riskModal'); showToast('已添加'); }
+function delRisk(id) { DB.risks=DB.risks.filter(r=>r.id!==id); saveDB(); renderDashboard(); }
+
+/* ===== 台账 ===== */
+function renderInventory() {
+  const stock=DB.transactions.filter(t=>t.type==='purchase'&&!t.sold);
+  const cost=stock.reduce((s,t)=>s+Number(t.price||0),0);
+  const profit=DB.transactions.filter(t=>t.type==='sale').reduce((s,t)=>s+Number(t.profit||0),0);
+  document.getElementById('invStockCount').textContent=stock.length;
+  document.getElementById('invStockCost').textContent=fmt(cost);
+  document.getElementById('invProfit').textContent=(profit>=0?'+':'')+fmt(profit);
+  document.getElementById('invProfit').className='value '+(profit>=0?'profit-pos':'profit-neg');
+  const sEl=document.getElementById('stockTable');
+  sEl.innerHTML=stock.length===0?'<tr><td colspan="6" class="empty-state">暂无库存</td></tr>':
+    stock.map(t=>`<tr><td><strong>${escapeHtml(t.model)}</strong></td><td>${escapeHtml(t.source||'-')}</td><td>${fmt(t.price)}</td><td>${t.date||'-'}</td><td style="color:var(--text-3);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(t.fault||'-')}</td><td><button class="btn btn-sm btn-ghost" onclick="quickSale('${t.id}')">出货</button></td></tr>`).join('');
+  const tEl=document.getElementById('txTable');
+  const txs=[...DB.transactions].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  tEl.innerHTML=txs.length===0?'<tr><td colspan="7" class="empty-state">暂无交易</td></tr>':
+    txs.map(t=>`<tr><td>${t.date||'-'}</td><td><span class="badge ${t.type==='purchase'?'badge-stock':'badge-sold'}">${t.type==='purchase'?'进货':'出货'}</span></td><td>${escapeHtml(t.model)}</td><td>${fmt(t.price)}</td><td>${escapeHtml(t.channel||t.source||'-')}</td><td class="${t.profit>0?'profit-pos':t.profit<0?'profit-neg':''}">${t.type==='sale'?(t.profit>=0?'+':'')+fmt(t.profit):'-'}</td><td><button class="btn btn-sm btn-danger" onclick="delTx('${t.id}')">删除</button></td></tr>`).join('');
+}
+function refreshStockSelect() {
+  const sel=document.getElementById('sStock'); const stock=DB.transactions.filter(t=>t.type==='purchase'&&!t.sold);
+  sel.innerHTML=stock.length===0?'<option value="">暂无库存，请先进货</option>':stock.map(t=>`<option value="${t.id}">${escapeHtml(t.model)} — 成本${fmt(t.price)}</option>`).join('');
+  document.getElementById('sPrice').value=''; document.getElementById('sProfitHint').textContent='';
+}
+document.getElementById('sStock').addEventListener('change',updateProfitHint);
+document.getElementById('sPrice').addEventListener('input',updateProfitHint);
+function updateProfitHint() {
+  const id=document.getElementById('sStock').value; const price=Number(document.getElementById('sPrice').value)||0;
+  const tx=DB.transactions.find(t=>t.id===id);
+  if(tx&&price>0){const p=price-Number(tx.price);const h=document.getElementById('sProfitHint');h.textContent=`预计利润：${p>=0?'+':''}${fmt(p)}`;h.style.color=p>=0?'var(--success)':'var(--danger)';}
+}
+function addPurchase() {
+  const model=document.getElementById('pModel').value.trim(),source=document.getElementById('pSource').value.trim(),price=Number(document.getElementById('pPrice').value);
+  if(!model)return showToast('请输入机型'); if(!source)return showToast('请输入来源渠道'); if(!price||price<=0)return showToast('请输入购入价格');
+  DB.transactions.push({id:uid(),type:'purchase',model,source,price,date:document.getElementById('pDate').value||today(),fault:document.getElementById('pFault').value.trim(),sold:false});
+  saveDB(); ['pModel','pSource','pPrice','pFault'].forEach(i=>document.getElementById(i).value=''); closeModal('purchaseModal'); renderInventory(); renderDashboard(); showToast('进货已记录');
+}
+function addSale() {
+  const id=document.getElementById('sStock').value; const price=Number(document.getElementById('sPrice').value);
+  if(!id)return showToast('请选择库存机器'); if(!price||price<=0)return showToast('请输入卖出价格');
+  const tx=DB.transactions.find(t=>t.id===id); if(!tx)return showToast('库存记录不存在');
+  tx.sold=true; DB.transactions.push({id:uid(),type:'sale',model:tx.model,price,channel:document.getElementById('sChannel').value.trim(),date:document.getElementById('sDate').value||today(),profit:price-Number(tx.price),purchaseId:id});
+  saveDB(); ['sChannel','sPrice'].forEach(i=>document.getElementById(i).value=''); closeModal('saleModal'); renderInventory(); renderDashboard(); showToast('出货已记录');
+}
+function quickSale(id){openModal('saleModal');setTimeout(()=>{document.getElementById('sStock').value=id;updateProfitHint();},50);}
+function delTx(id) {
+  if(!confirm('确定删除这条交易记录？'))return;
+  const tx=DB.transactions.find(t=>t.id===id);
+  if(tx&&tx.type==='purchase'&&tx.sold){
+    if(!confirm('该进货记录已售出，删除将同时删除对应的出货记录，确定继续？'))return;
+    DB.transactions=DB.transactions.filter(t=>!(t.type==='sale'&&t.purchaseId===id));
+  } else if(tx&&tx.type==='sale'&&tx.purchaseId){
+    const p=DB.transactions.find(t=>t.id===tx.purchaseId); if(p)p.sold=false;
+  }
+  DB.transactions=DB.transactions.filter(t=>t.id!==id); saveDB(); renderInventory(); renderDashboard(); showToast('已删除');
+}
+function exportCSV() {
+  if(DB.transactions.length===0)return showToast('暂无交易数据');
+  const headers=['日期','类型','机型','金额','渠道/来源','利润','故障备注'];
+  const rows=DB.transactions.map(t=>[t.date||'',t.type==='purchase'?'进货':'出货',t.model,t.price,t.channel||t.source||'',t.type==='sale'?(t.profit||0):'',t.fault||'']);
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`数码台账_${today()}.csv`; a.click(); showToast('CSV已导出');
+}
+
+/* ===== 项目管理 ===== */
+let projFilter='all';
+const STATUS_ICONS = {'想法':'💭','调研中':'🔍','动手做':'🔨','搁置':'⏸️'};
+function renderStatusFilter() {
+  const counts = {all:DB.projects.length};
+  ['想法','调研中','动手做','搁置'].forEach(s=>{
+    counts[s]=DB.projects.filter(p=>p.status===s).length + DB.projects.reduce((sum,p)=>sum+p.children.filter(c=>c.status===s).length,0);
+  });
+  const icons = {all:'📋','想法':'💭','调研中':'🔍','动手做':'🔨','搁置':'⏸️'};
+  const bar = document.getElementById('statusFilterBar');
+  bar.innerHTML = ['all','想法','调研中','动手做','搁置'].map(s=>`
+    <div class="status-filter-btn ${projFilter===s?'active':''}" data-s="${s}" onclick="setProjFilter('${s}')">
+      <span class="sf-icon">${icons[s]}</span>
+      <span>${s==='all'?'全部':s}</span>
+      <span class="sf-count">${counts[s]} 个</span>
+    </div>`).join('');
+}
+function setProjFilter(s) { projFilter=s; renderStatusFilter(); renderProjects(); }
+
+function renderProjects() {
+  renderStatusFilter();
+  const list=document.getElementById('projectList');
+  let projects=DB.projects;
+  if(projFilter!=='all'){projects=projects.map(p=>({...p,children:p.children.filter(c=>c.status===projFilter)})).filter(p=>p.children.length>0||p.status===projFilter);}
+  if(projects.length===0){list.innerHTML='<div class="empty-state">暂无项目</div>';return;}
+  list.innerHTML=projects.map(p=>{
+    const pStatus=p.status?`<span class="pbc-status status-${p.status}">${STATUS_ICONS[p.status]||''} ${p.status}</span>`:'';
+    const pTags=p.tags&&p.tags.length?p.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join(''):'';
+    const subs=p.children.map(c=>`<div class="sub-big-card">
+      <div class="sbc-header"><span class="pbc-status status-${c.status}" style="font-size:15px;padding:6px 16px;">${STATUS_ICONS[c.status]||''} ${c.status}</span><span class="sbc-title">${escapeHtml(c.title)}</span><button class="btn btn-sm btn-danger" style="margin-left:auto;" onclick="delSub('${p.id}','${c.id}')">删除</button></div>
+      <div class="sbc-meta">${c.tags&&c.tags.length?`<span>标签：${c.tags.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join('')}</span>`:''}${c.link?`<span><a href="${escapeHtml(c.link)}" target="_blank" style="color:var(--info);font-weight:600;">参考链接</a></span>`:''}</div>
+      <div class="sbc-desc">${c.idea?`<div><strong>设想：</strong>${escapeHtml(c.idea)}</div>`:''}${c.done?`<div><strong>已完成：</strong>${escapeHtml(c.done)}</div>`:''}${c.next?`<div><strong>下一步：</strong>${escapeHtml(c.next)}</div>`:''}${c.risk?`<div style="color:var(--warning);"><strong>风险：</strong>${escapeHtml(c.risk)}</div>`:''}</div>
+    </div>`).join('');
+    return `<div class="project-big-card" id="pbc-${p.id}" data-status="${p.status||''}">
+      <div class="pbc-header" onclick="toggleProjectCard('${p.id}')">
+        <span class="pbc-toggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        ${pStatus}
+        <span class="pbc-title">${escapeHtml(p.title)}</span>
+        <span class="pbc-tags">${pTags}</span>
+        <span class="pbc-count">${p.children.length} 个子项目</span>
+        <div class="pbc-actions">
+          <button class="pbc-btn" onclick="event.stopPropagation();editParent('${p.id}')">编辑</button>
+          <button class="pbc-btn" onclick="event.stopPropagation();openSubModal('${p.id}')">+ 子项目</button>
+          <button class="pbc-btn danger" onclick="event.stopPropagation();delParent('${p.id}')">删除</button>
+        </div>
+      </div>
+      <div class="pbc-body">${subs||'<div class="empty-state" style="padding:24px;">暂无子项目</div>'}</div>
+    </div>`;
+  }).join('');
+}
+function toggleProjectCard(id) { document.getElementById('pbc-'+id).classList.toggle('expanded'); }
+
+function saveParentProject() {
+  const eid=document.getElementById('ppEditId').value; const title=document.getElementById('ppTitle').value.trim();
+  if(!title)return showToast('请输入项目标题');
+  const status=document.getElementById('ppStatus').value; const tags=document.getElementById('ppTags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(eid){const p=DB.projects.find(p=>p.id===eid);if(p){p.title=title;p.status=status;p.tags=tags;}showToast('母项目已更新');}
+  else{DB.projects.push({id:uid(),title,status,tags,children:[]});showToast('母项目已创建');}
+  saveDB(); closeModal('parentModal'); renderProjects(); renderDashboard();
+}
+function editParent(id) {
+  const p=DB.projects.find(p=>p.id===id); if(!p)return;
+  document.getElementById('ppEditId').value=id; document.getElementById('ppTitle').value=p.title;
+  document.getElementById('ppStatus').value=p.status||'想法'; document.getElementById('ppTags').value=(p.tags||[]).join(',');
+  document.getElementById('parentModalTitle').textContent='编辑母项目'; openModal('parentModal');
+}
+function delParent(id) { if(!confirm('确定删除这个母项目及其所有子项目？'))return; DB.projects=DB.projects.filter(p=>p.id!==id); saveDB(); renderProjects(); renderDashboard(); }
+function openSubModal(pid) {
+  document.getElementById('spParentId').value=pid; ['spTitle','spTags','spIdea','spDone','spNext','spRisk','spLink'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('spStatus').value='想法'; openModal('subModal');
+}
+function addSubProject() {
+  const pid=document.getElementById('spParentId').value; const title=document.getElementById('spTitle').value.trim();
+  if(!title)return showToast('请输入标题'); const parent=DB.projects.find(p=>p.id===pid); if(!parent)return;
+  parent.children.push({id:uid(),title,status:document.getElementById('spStatus').value,tags:document.getElementById('spTags').value.split(',').map(s=>s.trim()).filter(Boolean),idea:document.getElementById('spIdea').value.trim(),done:document.getElementById('spDone').value.trim(),next:document.getElementById('spNext').value.trim(),risk:document.getElementById('spRisk').value.trim(),link:document.getElementById('spLink').value.trim(),createdAt:today()});
+  saveDB(); closeModal('subModal'); renderProjects(); renderDashboard(); showToast('子项目已创建');
+}
+function delSub(pid,sid) { if(!confirm('确定删除这个子项目？'))return; const p=DB.projects.find(p=>p.id===pid); if(p){p.children=p.children.filter(c=>c.id!==sid); saveDB(); renderProjects(); renderDashboard();} }
+
+/* ===== 备忘录 ===== */
+document.getElementById('noteInput').addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();addNote();}});
+function addNote() {
+  const content=document.getElementById('noteInput').value.trim(); if(!content)return showToast('请输入内容');
+  const category=document.getElementById('noteCategory').value.trim()||'未分类';
+  DB.notes.unshift({id:uid(),content,category,createdAt:new Date().toLocaleString('zh-CN')});
+  document.getElementById('noteInput').value=''; document.getElementById('noteCategory').value=''; saveDB(); renderNotes(); showToast('笔记已保存');
+}
+function renderNotes() {
+  const q=document.getElementById('noteSearch').value.toLowerCase();
+  const notes=DB.notes.filter(n=>!q||n.content.toLowerCase().includes(q)||n.category.toLowerCase().includes(q));
+  const el=document.getElementById('notesGrid');
+  el.innerHTML=notes.length===0?'<div class="empty-state" style="grid-column:1/-1;">暂无笔记</div>':
+    notes.map(n=>`<div class="note-card"><button class="note-del" onclick="delNote('${n.id}')">&times;</button><span class="note-cat">${escapeHtml(n.category)}</span><div class="note-content">${escapeHtml(n.content)}</div><div class="note-time">${n.createdAt}</div></div>`).join('');
+}
+function delNote(id){DB.notes=DB.notes.filter(n=>n.id!==id); saveDB(); renderNotes();}
+
+/* ===== 待办 ===== */
+function addTodo() {
+  const text=document.getElementById('todoInput').value.trim(); if(!text)return showToast('请输入待办内容');
+  DB.todos.unshift({id:uid(),text,done:false,createdAt:today()}); document.getElementById('todoInput').value='';
+  saveDB(); renderTodos(); renderDashboard();
+}
+function renderTodos() {
+  const el=document.getElementById('todoList');
+  el.innerHTML=DB.todos.length===0?'<div class="empty-state">暂无待办</div>':
+    DB.todos.map(t=>`<div class="todo-item ${t.done?'done':''}"><input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo('${t.id}')"><span class="todo-text">${escapeHtml(t.text)}</span><button class="todo-del" onclick="delTodo('${t.id}')">&times;</button></div>`).join('');
+}
+function toggleTodo(id){const t=DB.todos.find(t=>t.id===id);if(t){t.done=!t.done;saveDB();renderTodos();renderDashboard();}}
+function delTodo(id){DB.todos=DB.todos.filter(t=>t.id!==id);saveDB();renderTodos();renderDashboard();}
+
+/* ===== 导出 ===== */
+function exportAllData() {
+  const data=JSON.stringify(DB,null,2); const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`工作台备份_${today()}.json`; a.click(); showToast('备份已导出');
+}
+function importAllData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || typeof data !== 'object' || !Array.isArray(data.transactions)) {
+        showToast('备份文件格式不正确'); return;
+      }
+      if (!confirm('导入将覆盖当前全部数据，确定继续？')) return;
+      Object.keys(DB).forEach(k => { if (data[k] !== undefined) DB[k] = data[k]; });
+      saveDB(); renderDashboard(); renderInventory(); renderProjects(); renderNotes(); renderTodos();
+      showToast('数据导入成功');
+    } catch(err) { showToast('导入失败：文件无法解析'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+/* ===== 快捷键 ===== */
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  const rk={'1':'dashboard','2':'inventory','3':'projects','4':'notes','5':'todos'};
+  if(rk[e.key]){navigate(rk[e.key]);return;}
+  if(e.key==='n'||e.key==='N'){const cur=location.hash.slice(1)||'dashboard';if(cur==='todos'||cur==='dashboard')document.getElementById('todoInput').focus();else if(cur==='notes')document.getElementById('noteInput').focus();else openModal('parentModal');}
+  if(e.key==='p'||e.key==='P')openModal('purchaseModal');
+  if(e.key==='s'||e.key==='S')openModal('saleModal');
+  if(e.key==='Escape')document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+});
+
+/* ===== 初始化 ===== */
+loadDB();
+document.documentElement.style.setProperty('--blur-amount', settings.blur + 'px');
+applyBackground();
+document.getElementById('todayDate').textContent=new Date().toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+const initRoute=location.hash.slice(1)||'dashboard';
+navigate(ROUTES[initRoute]?initRoute:'dashboard');
+</script>
+</body>
+</html>
